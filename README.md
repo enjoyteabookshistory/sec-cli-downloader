@@ -30,7 +30,7 @@ A lightweight CLI tool to download SEC 10-K filings directly from the SEC websit
 git clone https://github.com/your-username/sec-cli-downloader.git
 cd sec-cli-downloader
 npm install
-
+```
 
 # 用一個 CLI 工具，一鍵下載美股公司財報（SEC 10-K）
 
