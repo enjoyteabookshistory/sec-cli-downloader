@@ -4,7 +4,7 @@ A lightweight CLI tool to download SEC 10-K filings directly from the SEC websit
 
 一個輕量級命令行工具，用於從美國 SEC 官網下載公司 10-K 年度財報。
 
----
+
 
 ## 🚀 Features | 功能
 
@@ -23,7 +23,6 @@ A lightweight CLI tool to download SEC 10-K filings directly from the SEC websit
 - Fast and minimal dependencies  
   快速且依賴少
 
----
 
 ## 📦 Installation | 安裝
 
