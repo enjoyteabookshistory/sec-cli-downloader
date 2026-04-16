@@ -1,6 +1,6 @@
 {
   "name": "sec-cli-downloader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "CLI tool to download SEC filings (10-K, 10-Q) from SEC EDGAR",
   "main": "sec.js",
   "bin": {
