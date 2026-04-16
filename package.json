@@ -1,16 +1,37 @@
 {
-  "name": "download-sec",
+  "name": "sec-cli-downloader",
   "version": "1.0.0",
-  "description": "",
+  "description": "CLI tool to download SEC filings (10-K, 10-Q) from SEC EDGAR",
   "main": "sec.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "bin": {
+    "sec": "./sec.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node sec.js",
+    "test": "echo \"No tests yet\""
+  },
+  "keywords": [
+    "sec",
+    "finance",
+    "cli",
+    "stocks",
+    "10-k",
+    "edgar"
+  ],
+  "author": "chane",
+  "license": "MIT",
   "dependencies": {
     "axios": "^1.15.0",
-    "commander": "^14.0.3"
-  }
+    "commander": "^14.0.3",
+    "settings": "^0.1.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enjoyteabookshistory/sec-cli-downloader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/enjoyteabookshistory/sec-cli-downloader/issues"
+  },
+  "homepage": "https://github.com/enjoyteabookshistory/sec-cli-downloader#readme"
 }
