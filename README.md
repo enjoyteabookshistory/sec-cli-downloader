@@ -24,15 +24,61 @@ A lightweight CLI tool to download SEC filings directly from the SEC website.
 - [`downloads/`](/Users/chane/Desktop/Github/download-sec/downloads): downloaded SEC filing documents grouped by ticker
 - [`package.json`](/Users/chane/Desktop/Github/download-sec/package.json): package metadata and dependencies
 
----
+
 
 ## Installation
+=======
+## 🚀 Features | 功能
+
+- Download 10-K filings by ticker and year  
+  根據股票代碼和年份下載年報
+
+- Support latest filing download  
+  支援下載最新年報（latest）
+
+- Local caching (CIK & filings)  
+  本地快取（CIK 與 filings）
+
+- Avoid duplicate downloads  
+  避免重複下載
+
+- Fast and minimal dependencies  
+  快速且依賴少
+
+- Support multiple tickers (e.g. AAPL,MSFT)  
+  支援多股票同時下載  
+
+- Support multiple filing types (10-K / 10-Q / 8-K)  
+  支援多種財報類型  
+
+- Limit number of downloads  
+  支援下載數量限制  
+
+- CLI tool available via npm (`sec` command)  
+  已發佈為 npm CLI 工具  
+
+## 📦 Installation | 安裝
 
 ```bash
 git clone https://github.com/your-username/sec-cli-downloader.git
 cd sec-cli-downloader
 npm install
 ```
+
+=======
+### 🆕 Option: Install via npm (Recommended)
+
+```bash
+npm install -g sec-cli-downloader
+
+Then you can use:
+```bash
+sec AAPL latest
+
+Or run without install:
+```bash
+npx sec-cli-downloader AAPL latest
+
 
 # 用一個 CLI 工具，一鍵下載美股公司財報（SEC 10-K）
 
@@ -75,7 +121,42 @@ node sec.js GOOGL latest
 
 👉 會自動下載 Alphabet Inc. 最新提交的 10-K 年報
 
+
 ---
+
+=======
+
+
+---
+
+## ✅ ③ 替换示例（保留原 node，用 CLI 增强）
+```bash
+sec AAPL 2023
+# 或
+```bash
+node sec.js AAPL 2023
+---
+```bash
+sec GOOGL latest
+# 或
+```bash
+node sec.js GOOGL latest
+
+### 🆕 更多用法
+
+```bash
+# 多股票
+sec AAPL,MSFT latest
+
+# 下载 10-Q
+sec MSFT latest --form 10-Q
+
+# 限制数量
+sec AAPL latest --limit 2
+
+# 自定义输出目录
+sec GOOGL 2024 --output ./reports
+
 
 ## 🧠 核心實現原理
 
@@ -91,6 +172,7 @@ node sec.js GOOGL latest
 ```text
 https://data.sec.gov/
 ```
+（工具通過 CLI 封裝 SEC API，實現自動化下載與本地快取）
 
 ---
 
@@ -177,6 +259,20 @@ open downloads/GOOGL/xxxx.htm
 sec analyze AAPL
 ```
 
+
+=======
+### 🆕 CLI 用法（推薦）
+
+```bash
+sec <ticker> <year|latest> [options]
+
+支持：
+
+多股票：AAPL,MSFT
+不同表單：--form 10-K / 10-Q / 8-K
+限制下載數量：--limit
+
+
 ---
 
 ## 🔗 開源地址
@@ -232,6 +328,17 @@ node sec.js GOOGL latest
 
 This will fetch the latest filing of Alphabet Inc. automatically.
 
+
+=======
+### 🆕 CLI Usage (Recommended)
+
+```bash
+sec AAPL latest
+
+Or
+```bash
+npx sec-cli-downloader AAPL latest
+>>>>>>> dev
 ---
 
 ## 🧠 How it works
@@ -333,6 +440,7 @@ sec analyze AAPL
 ## ⭐ If you find it useful
 
 Give it a star or contribute 🙌
+
 =======
 ---
 
@@ -376,3 +484,4 @@ Environment variable:
 - [ ] Add tests for filtering and CLI parsing
 - [ ] Add batch download support for multiple tickers
 
+=======
