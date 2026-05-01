@@ -1,63 +1,30 @@
 #!/usr/bin/env node
 
 const axios = require("axios");
-const { Command } = require("commander");
+const { Command, InvalidArgumentError } = require("commander");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 const USER_AGENT = process.env.SEC_USER_AGENT || "your-email@example.com";
-=======
-// ===== 基础配置 =====
-const USER_AGENT = process.env.SEC_USER_AGENT || "your-email@example.com";
-=======
-// ===== 基础配置 =====
-const USER_AGENT = process.env.SEC_USER_AGENT || "your-email@example.com";
->>>>>>> a3d0009 (updae sec to be a npm package)
+const CACHE_DIR = process.env.SEC_CACHE_DIR
+  ? path.resolve(process.env.SEC_CACHE_DIR)
+  : path.join(os.homedir(), ".sec-cli-downloader", "cache");
+const FILINGS_CACHE_DIR = path.join(CACHE_DIR, "filings");
+const DEFAULT_DOWNLOAD_DIR = path.resolve(process.cwd(), "downloads");
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
-if (!process.env.SEC_USER_AGENT) {
-  console.warn(
-    "⚠️  SEC_USER_AGENT not set. Please set your email to avoid rate limiting."
-  );
+function ensureDirectory(dir) {
+  fs.mkdirSync(dir, { recursive: true });
 }
 
-<<<<<<< HEAD
->>>>>>> dev
-=======
->>>>>>> a3d0009 (updae sec to be a npm package)
-const BASE_DIR = __dirname;
-const CACHE_DIR = path.join(BASE_DIR, "cache");
-const FILINGS_CACHE_DIR = path.join(CACHE_DIR, "filings");
-const DEFAULT_DOWNLOAD_DIR = path.join(BASE_DIR, "downloads");
-<<<<<<< HEAD
-<<<<<<< HEAD
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-=======
->>>>>>> dev
-=======
->>>>>>> a3d0009 (updae sec to be a npm package)
-
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
-
-// ===== 初始化目录 =====
-fs.mkdirSync(CACHE_DIR, { recursive: true });
-fs.mkdirSync(FILINGS_CACHE_DIR, { recursive: true });
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// ===== 工具函数 =====
->>>>>>> dev
-=======
-// ===== 工具函数 =====
->>>>>>> a3d0009 (updae sec to be a npm package)
 function loadJSON(file) {
   if (!fs.existsSync(file)) return null;
   return JSON.parse(fs.readFileSync(file, "utf8"));
 }
 
 function saveJSON(file, data) {
+  ensureDirectory(path.dirname(file));
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
@@ -65,304 +32,197 @@ function normalizeTicker(ticker) {
   return ticker.trim().toUpperCase();
 }
 
+function parseTickerList(value) {
+  const tickers = value
+    .split(",")
+    .map(normalizeTicker)
+    .filter(Boolean);
+
+  if (tickers.length === 0) {
+    throw new InvalidArgumentError("ticker must include at least one symbol");
+  }
+
+  return tickers;
+}
+
+function parseYear(value) {
+  const year = value.trim();
+
+  if (year.toLowerCase() === "latest") return year;
+  if (/^\d{4}$/.test(year)) return year;
+
+  throw new InvalidArgumentError('year must be a 4-digit year or "latest"');
+}
+
 function parseLimit(value) {
   const limit = Number.parseInt(value, 10);
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-=======
->>>>>>> a3d0009 (updae sec to be a npm package)
   if (!Number.isInteger(limit) || limit < 1) {
-    throw new Error("--limit must be a positive integer");
+    throw new InvalidArgumentError("--limit must be a positive integer");
   }
+
   return limit;
 }
 
-<<<<<<< HEAD
-=======
-  if (!Number.isInteger(limit) || limit < 1) {
-    throw new Error("--limit must be a positive integer");
-  }
-  return limit;
-}
-
-=======
->>>>>>> a3d0009 (updae sec to be a npm package)
 function sleep(ms) {
-  return new Promise((r) => setTimeout(r, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// ===== 安全请求（防止崩溃）=====
 async function safeRequest(config) {
   try {
-    return await axios(config);
-  } catch (err) {
-    if (err.response) {
-      console.error("HTTP Error:", err.response.status);
-    } else {
-      console.error("Network Error:", err.message);
+    return await axios({
+      timeout: 30000,
+      ...config,
+      headers: {
+        "User-Agent": USER_AGENT,
+        ...(config.headers || {}),
+      },
+    });
+  } catch (error) {
+    if (error.response) {
+      throw new Error(`SEC request failed with status ${error.response.status}`);
     }
-    throw err;
+
+    throw new Error(`SEC request failed: ${error.message}`);
   }
 }
 
-// ===== CLI =====
-<<<<<<< HEAD
->>>>>>> dev
-=======
->>>>>>> a3d0009 (updae sec to be a npm package)
 function parseOptions(argv) {
   const program = new Command();
 
   program
     .name("sec")
     .description("Download SEC filings by ticker and filing year")
-<<<<<<< HEAD
-<<<<<<< HEAD
-    .argument("<ticker>", "stock ticker, for example AAPL")
-    .argument("<year>", 'filing year, or "latest"')
-    .option("-f, --form <type>", "SEC filing form to download", "10-K")
-    .option("-l, --limit <number>", "maximum number of filings to download")
-=======
     .argument("<ticker>", "stock ticker, e.g. AAPL or AAPL,MSFT")
     .argument("<year>", 'filing year or "latest"')
     .option("-f, --form <type>", "SEC form type", "10-K")
-    .option("-l, --limit <number>", "max number of filings")
->>>>>>> a3d0009 (updae sec to be a npm package)
+    .option("-l, --limit <number>", "max number of filings", parseLimit)
     .option("-o, --output <dir>", "download directory", DEFAULT_DOWNLOAD_DIR)
-    .option("--refresh-cache", "ignore cache")
+    .option("--refresh-cache", "ignore cached SEC metadata")
     .addHelpText(
       "after",
       `
 Examples:
-<<<<<<< HEAD
-  node sec.js AAPL 2023
-  node sec.js AAPL latest
-  node sec.js MSFT latest --form 10-Q --limit 2
-  node sec.js GOOGL 2024 --output ./reports --refresh-cache`
-=======
-    .argument("<ticker>", "stock ticker, e.g. AAPL or AAPL,MSFT")
-    .argument("<year>", 'filing year or "latest"')
-    .option("-f, --form <type>", "SEC form type", "10-K")
-    .option("-l, --limit <number>", "max number of filings")
-    .option("-o, --output <dir>", "download directory", DEFAULT_DOWNLOAD_DIR)
-    .option("--refresh-cache", "ignore cache")
-    .addHelpText(
-      "after",
-      `
-Examples:
-=======
->>>>>>> a3d0009 (updae sec to be a npm package)
   sec AAPL 2023
   sec AAPL latest
   sec MSFT latest --form 10-Q --limit 2
   sec GOOGL 2024 --output ./reports --refresh-cache
   sec AAPL,MSFT latest --limit 2
 `
-<<<<<<< HEAD
->>>>>>> dev
-=======
->>>>>>> a3d0009 (updae sec to be a npm package)
     );
 
   program.parse(argv);
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const [ticker, year] = program.args;
+  const [tickerInput, yearInput] = program.args;
   const options = program.opts();
 
   return {
-    ticker: normalizeTicker(ticker),
-=======
-  const [tickerInput, year] = program.args;
-  const options = program.opts();
-
-  return {
-    tickers: tickerInput.split(",").map(normalizeTicker),
->>>>>>> dev
-=======
-  const [tickerInput, year] = program.args;
-  const options = program.opts();
-
-  return {
-    tickers: tickerInput.split(",").map(normalizeTicker),
->>>>>>> a3d0009 (updae sec to be a npm package)
-    year,
-    form: options.form.toUpperCase(),
-    limit: options.limit ? parseLimit(options.limit) : null,
-    outputDir: path.resolve(options.output),
+    tickers: parseTickerList(tickerInput),
+    year: parseYear(yearInput),
+    form: options.form.trim().toUpperCase(),
+    limit: options.limit || null,
+    outputDir: path.resolve(process.cwd(), options.output),
     refreshCache: Boolean(options.refreshCache),
   };
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// ===== ticker → CIK =====
->>>>>>> dev
-=======
-// ===== ticker → CIK =====
->>>>>>> a3d0009 (updae sec to be a npm package)
-async function getCIK(ticker) {
+async function getCIK(ticker, refreshCache = false) {
   const cacheFile = path.join(CACHE_DIR, "ticker_cik.json");
   const cache = loadJSON(cacheFile) || {};
 
-  if (cache[ticker]) {
+  if (!refreshCache && cache[ticker]) {
     console.log("Cache hit (CIK):", ticker);
     return cache[ticker];
   }
 
   console.log("Fetching CIK from SEC...");
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const res = await axios.get("https://www.sec.gov/files/company_tickers.json", {
-=======
-  const res = await safeRequest({
+  const response = await safeRequest({
     url: "https://www.sec.gov/files/company_tickers.json",
->>>>>>> dev
-=======
-  const res = await safeRequest({
-    url: "https://www.sec.gov/files/company_tickers.json",
->>>>>>> a3d0009 (updae sec to be a npm package)
-    headers: { "User-Agent": USER_AGENT },
   });
 
-  for (const key in res.data) {
-    if (res.data[key].ticker.toUpperCase() === ticker) {
-      const cik = res.data[key].cik_str.toString().padStart(10, "0");
+  const company = Object.values(response.data).find(
+    (item) => item.ticker && item.ticker.toUpperCase() === ticker
+  );
 
-      cache[ticker] = cik;
-      saveJSON(cacheFile, cache);
-
-      return cik;
-    }
+  if (!company) {
+    throw new Error(`Ticker not found: ${ticker}`);
   }
 
-  throw new Error(`Ticker not found: ${ticker}`);
+  const cik = company.cik_str.toString().padStart(10, "0");
+  cache[ticker] = cik;
+  saveJSON(cacheFile, cache);
+
+  return cik;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// ===== filings =====
->>>>>>> dev
-=======
-// ===== filings =====
->>>>>>> a3d0009 (updae sec to be a npm package)
 async function getFilings(cik, ticker, refreshCache = false) {
-  const file = path.join(FILINGS_CACHE_DIR, `${ticker}.json`);
+  const cacheFile = path.join(FILINGS_CACHE_DIR, `${ticker}.json`);
 
-  if (!refreshCache && fs.existsSync(file)) {
-    const stat = fs.statSync(file);
+  if (!refreshCache && fs.existsSync(cacheFile)) {
+    const stat = fs.statSync(cacheFile);
     const age = Date.now() - stat.mtimeMs;
 
     if (age < CACHE_TTL_MS) {
-      console.log("Cache hit (filings)");
-      return loadJSON(file);
+      console.log("Cache hit (filings):", ticker);
+      return loadJSON(cacheFile);
     }
   }
 
   console.log("Fetching filings from SEC...");
 
-  const url = `https://data.sec.gov/submissions/CIK${cik}.json`;
-<<<<<<< HEAD
-<<<<<<< HEAD
-  const res = await axios.get(url, {
-=======
-
-  const res = await safeRequest({
-    url,
->>>>>>> dev
-=======
-
-  const res = await safeRequest({
-    url,
->>>>>>> a3d0009 (updae sec to be a npm package)
-    headers: { "User-Agent": USER_AGENT },
+  const response = await safeRequest({
+    url: `https://data.sec.gov/submissions/CIK${cik}.json`,
   });
 
-  saveJSON(file, res.data.filings.recent);
+  const recentFilings = response.data?.filings?.recent;
 
-  return res.data.filings.recent;
+  if (!recentFilings) {
+    throw new Error(`Unable to load recent filings for ${ticker}`);
+  }
+
+  saveJSON(cacheFile, recentFilings);
+  return recentFilings;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// ===== 过滤 =====
->>>>>>> dev
-=======
-// ===== 过滤 =====
->>>>>>> a3d0009 (updae sec to be a npm package)
 function filterFilings(filings, { year, form, limit }) {
   const results = [];
   const latestOnly = year.toLowerCase() === "latest";
+  const total = Array.isArray(filings.form) ? filings.form.length : 0;
 
-  for (let i = 0; i < filings.form.length; i++) {
-    if (filings.form[i] !== form) continue;
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
+  for (let index = 0; index < total; index += 1) {
+    if (filings.form[index] !== form) continue;
 
->>>>>>> a3d0009 (updae sec to be a npm package)
-    if (!latestOnly && !filings.filingDate[i].startsWith(year)) continue;
+    const filingDate = filings.filingDate[index] || "";
+    if (!latestOnly && !filingDate.startsWith(year)) continue;
 
-=======
+    const document = filings.primaryDocument[index];
+    if (!document) continue;
 
-    if (!latestOnly && !filings.filingDate[i].startsWith(year)) continue;
-
->>>>>>> dev
     results.push({
-      accession: filings.accessionNumber[i],
-      document: filings.primaryDocument[i],
-      filingDate: filings.filingDate[i],
-      form: filings.form[i],
+      accession: filings.accessionNumber[index],
+      document,
+      filingDate,
+      form: filings.form[index],
     });
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    if (latestOnly) break;
     if (limit && results.length >= limit) break;
-=======
-    // limit 优先
-    if (limit && results.length >= limit) break;
-
-    // latest 默认 1 条
     if (latestOnly && !limit && results.length >= 1) break;
->>>>>>> dev
-=======
-    // limit 优先
-    if (limit && results.length >= limit) break;
-
-    // latest 默认 1 条
-    if (latestOnly && !limit && results.length >= 1) break;
->>>>>>> a3d0009 (updae sec to be a npm package)
   }
 
   return results;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// ===== 下载 =====
->>>>>>> dev
-=======
-// ===== 下载 =====
->>>>>>> a3d0009 (updae sec to be a npm package)
 async function downloadFile(cik, ticker, filing, outputDir) {
   const accession = filing.accession.replace(/-/g, "");
-  const dir = path.join(outputDir, ticker);
+  const tickerDir = path.join(outputDir, ticker);
+  const filePath = path.join(tickerDir, filing.document);
 
-  fs.mkdirSync(dir, { recursive: true });
-
-  const filePath = path.join(dir, filing.document);
+  ensureDirectory(tickerDir);
 
   if (fs.existsSync(filePath)) {
-    console.log("Skip:", filing.document);
-    return;
+    console.log("Skip:", filePath);
+    return filePath;
   }
 
   const url = `https://www.sec.gov/Archives/edgar/data/${Number.parseInt(
@@ -372,100 +232,85 @@ async function downloadFile(cik, ticker, filing, outputDir) {
 
   console.log(`Downloading ${filing.form} ${filing.filingDate}: ${filing.document}`);
 
-  const res = await safeRequest({
+  const response = await safeRequest({
     url,
-    headers: { "User-Agent": USER_AGENT },
     responseType: "stream",
   });
 
   const writer = fs.createWriteStream(filePath);
-  res.data.pipe(writer);
+  response.data.pipe(writer);
 
-  return new Promise((resolve, reject) => {
-    writer.on("finish", () => {
-      console.log("Saved:", filePath);
-      resolve();
-    });
+  await new Promise((resolve, reject) => {
+    writer.on("finish", resolve);
     writer.on("error", reject);
   });
+
+  console.log("Saved:", filePath);
+  return filePath;
 }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-// ===== 主流程 =====
 async function processTicker(ticker, options) {
-  console.log(`\n📊 ${ticker} ${options.year} ${options.form}\n`);
+  console.log(`\n${ticker} ${options.year} ${options.form}\n`);
 
-  const cik = await getCIK(ticker);
+  const cik = await getCIK(ticker, options.refreshCache);
   console.log("CIK:", cik);
 
   const filings = await getFilings(cik, ticker, options.refreshCache);
   const targets = filterFilings(filings, options);
 
   if (targets.length === 0) {
-    console.log(`No ${options.form} found`);
+    console.log(`No ${options.form} filings found for ${ticker}`);
     return;
   }
 
   for (const filing of targets) {
     await downloadFile(cik, ticker, filing, options.outputDir);
-    await sleep(200); // 限速
+    await sleep(200);
   }
 }
 
->>>>>>> a3d0009 (updae sec to be a npm package)
-async function main() {
+async function main(argv = process.argv) {
   try {
-    const options = parseOptions(process.argv);
+    const options = parseOptions(argv);
+
+    if (!process.env.SEC_USER_AGENT) {
+      console.warn(
+        "Warning: SEC_USER_AGENT is not set. Set your email to reduce SEC rate-limit issues."
+      );
+    }
+
+    ensureDirectory(options.outputDir);
 
     for (const ticker of options.tickers) {
       await processTicker(ticker, options);
     }
 
     console.log("\nDone");
-  } catch (err) {
-    console.error("Error:", err.message);
-    process.exitCode = 1;
-=======
-// ===== 主流程 =====
-async function processTicker(ticker, options) {
-  console.log(`\n📊 ${ticker} ${options.year} ${options.form}\n`);
-
-  const cik = await getCIK(ticker);
-  console.log("CIK:", cik);
-
-  const filings = await getFilings(cik, ticker, options.refreshCache);
-  const targets = filterFilings(filings, options);
-
-  if (targets.length === 0) {
-    console.log(`No ${options.form} found`);
-    return;
-  }
-
-  for (const filing of targets) {
-    await downloadFile(cik, ticker, filing, options.outputDir);
-    await sleep(200); // 限速
->>>>>>> dev
-  }
-}
-
-<<<<<<< HEAD
-async function main() {
-  try {
-    const options = parseOptions(process.argv);
-
-    for (const ticker of options.tickers) {
-      await processTicker(ticker, options);
-    }
-
-    console.log("\nDone");
-  } catch (err) {
-    console.error("Error:", err.message);
+  } catch (error) {
+    console.error("Error:", error.message);
     process.exitCode = 1;
   }
 }
 
-=======
->>>>>>> a3d0009 (updae sec to be a npm package)
-main();
+module.exports = {
+  CACHE_DIR,
+  CACHE_TTL_MS,
+  DEFAULT_DOWNLOAD_DIR,
+  FILINGS_CACHE_DIR,
+  downloadFile,
+  filterFilings,
+  getCIK,
+  getFilings,
+  main,
+  normalizeTicker,
+  parseLimit,
+  parseOptions,
+  parseTickerList,
+  parseYear,
+  processTicker,
+  safeRequest,
+};
+
+if (require.main === module) {
+  main();
+}

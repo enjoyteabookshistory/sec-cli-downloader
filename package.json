@@ -1,15 +1,19 @@
 {
   "name": "sec-cli-downloader",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "CLI tool to download SEC filings (10-K, 10-Q) from SEC EDGAR",
   "main": "sec.js",
   "bin": {
     "sec": "./sec.js"
   },
   "type": "commonjs",
+  "files": [
+    "sec.js",
+    "README.md"
+  ],
   "scripts": {
     "start": "node sec.js",
-    "test": "echo \"No tests yet\""
+    "test": "node --test"
   },
   "keywords": [
     "sec",
@@ -21,6 +25,9 @@
   ],
   "author": "chane",
   "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "axios": "^1.15.0",
     "commander": "^14.0.3",
